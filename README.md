@@ -30,5 +30,5 @@ python enjoy.py --config-path scenario/deatmatch.cfg
 python enjoy.py --config-path scenario/deatmatch.cfg --roe
 ~~~~
 
-## Acnkowledgements
+## Acknowledgements
 This repository is based on https://github.com/openai/baselines and https://github.com/p-kar/a2c-acktr-vizdoom.
