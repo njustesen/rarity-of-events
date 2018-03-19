@@ -9,8 +9,8 @@ _vizdoom.ini
 logs/
 
 # Network models
-trained_models/
-*.pt
+#models/
+#*.pt
 
 # Mac specifig ignores
 .DS_Store
