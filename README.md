@@ -8,7 +8,7 @@ scipy
 sdl2
 vizdoom
 
-## Training A2C baseline
+## Training the agent
 ~~~~
 # A2C baseline
 python main.py --num-processes 16 --config-path scenario/deathmatch.cfg --num-frames 75000000 --no-vis
