@@ -3,10 +3,11 @@ Code for the Rarity of Events method that rewards the agent based on the tempora
 Pre-trained models are found in the models directory.
 
 # Packages to install
-pytorch
-scipy
-sdl2
-vizdoom
+* pytorch
+* scipy
+* sdl2
+* vizdoom
+* pickle
 
 ## Training the agent
 ~~~~
