@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+
+# Vizdoom files
+_vizdoom.ini
+*.wad.bak
+
+# Log files
+logs/
+
+# Network models
+trained_models/
+*.pt
+
+# Mac specifig ignores
+.DS_Store
+
+# Archives
+.zip
