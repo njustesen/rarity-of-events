@@ -216,22 +216,21 @@ def main():
         rollouts.compute_returns(next_value, args.use_gae, args.gamma, args.tau)
 
         
-	values, action_log_probs, dist_entropy = actor_critic.evaluate_actions(Variable(rollouts.observations[:-1].view(-1, *obs_shape)), Variable(rollouts.actions.view(-1, action_shape)))
+        values, action_log_probs, dist_entropy = actor_critic.evaluate_actions(Variable(rollouts.observations[:-1].view(-1, *obs_shape)), Variable(rollouts.actions.view(-1, action_shape)))
 
-	values = values.view(args.num_steps, args.num_processes, 1)
-	action_log_probs = action_log_probs.view(args.num_steps, args.num_processes, 1)
+        values = values.view(args.num_steps, args.num_processes, 1)
+        action_log_probs = action_log_probs.view(args.num_steps, args.num_processes, 1)
+        advantages = Variable(rollouts.returns[:-1]) - values
+        value_loss = advantages.pow(2).mean()
 
-	advantages = Variable(rollouts.returns[:-1]) - values
-	value_loss = advantages.pow(2).mean()
+        action_loss = -(Variable(advantages.data) * action_log_probs).mean()
 
-	action_loss = -(Variable(advantages.data) * action_log_probs).mean()
+        optimizer.zero_grad()
+        (value_loss * args.value_loss_coef + action_loss - dist_entropy * args.entropy_coef).backward()
 
-	optimizer.zero_grad()
-	(value_loss * args.value_loss_coef + action_loss - dist_entropy * args.entropy_coef).backward()
+        nn.utils.clip_grad_norm(actor_critic.parameters(), args.max_grad_norm)
 
-	nn.utils.clip_grad_norm(actor_critic.parameters(), args.max_grad_norm)
-
-	optimizer.step()
+        optimizer.step()
 
         rollouts.observations[0].copy_(rollouts.observations[-1])
 

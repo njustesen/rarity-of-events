@@ -9,7 +9,7 @@ fontsize = 14
 
 skip_main_plot = False
 skip_event_plot = False
-single = True
+single = False
 single_title = "deathmatch"
 
 plt.style.use('ggplot')
@@ -62,8 +62,8 @@ def plot_rewards(fig, data):
         if event and title in ["my_way_home"]:
             scale = 100  # Scaling was fixed, so not needed in new experiments
 
-        if event and title in ["deadly_corridor"]:
-            scale = 0.1
+        #if event and title in ["deadly_corridor"]:
+            #scale = 0.1
 
         for d in data[i][1]:
             x.append(d[1])
