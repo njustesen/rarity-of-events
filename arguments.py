@@ -67,8 +67,16 @@ def get_args():
                         help='Trains with visuals (default: False)')
     parser.add_argument('--num-events', type=int, default=26,
                         help='number of events to record (default: 26)')
+    parser.add_argument('--capacity', type=int, default=100,
+                        help='Size of the event buffer (default: 100)')
     parser.add_argument('--num-vars', type=int, default=17,
                         help='number of vars to record (default: 17)')
+    parser.add_argument('--qd', action='store_true', default=False,
+                        help='RoE QD (default: False)')
+    parser.add_argument('--exp-id', type=int, required=True,
+                        help='Experiment ID')
+    parser.add_argument('--agent-id', type=int, required=True,
+                        help='Experiment ID')
     args = parser.parse_args()
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()

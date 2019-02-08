@@ -14,7 +14,7 @@ import torch.optim as optim
 from torch.autograd import Variable
 from torch.utils.data.sampler import BatchSampler, SubsetRandomSampler
 
-from event_buffer import EventBuffer
+from event_buffer import EventBuffer, EventBufferSQLProxy
 from arguments import get_args
 from envs import make_env
 from vec_env import VecEnv
@@ -129,10 +129,17 @@ def main():
         current_obs = current_obs.cuda()
         rollouts.cuda()
 
+    # Create event buffer
     if not args.resume:
-        event_buffer = EventBuffer(args.num_events, 100)
+        if args.qd:
+            event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id)
+        else:
+            event_buffer = EventBuffer(args.num_events, args.capacity)
     else:
-        event_buffer = pickle.load(open(log_file_name + "_event_buffer_temp.p", "rb"))
+        if args.qd:
+            event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id)
+        else:
+            event_buffer = pickle.load(open(log_file_name + "_event_buffer_temp.p", "rb"))
 
     event_episode_rewards = []
 
