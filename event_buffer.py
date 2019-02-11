@@ -24,13 +24,13 @@ class EventBufferSQLProxy:
         )
         self.cache = None
         
-    def record_events(self, events):
+    def record_events(self, events, frame):
         mycursor = self.mydb.cursor()
-        cmd = "INSERT INTO Event (ExperimentID, ActorID"
+        cmd = "INSERT INTO Event (ExperimentID, ActorID, Frame"
         for i in range(len(events)):
             cmd += ", Event{}".format(i)
         cmd += ")"
-        cmd += " VALUES ({}, {}".format(self.exp_id, self.actor_id)
+        cmd += " VALUES ({}, {}, {}".format(self.exp_id, self.actor_id, frame)
         for i in range(len(events)):
             cmd += ", %s"
         cmd += ")"
@@ -98,7 +98,7 @@ class EventBuffer:
         self.events = []
         self.event_clip = event_clip
 
-    def record_events(self, events):
+    def record_events(self, events, frame):
         if len(self.events) < self.capacity:
             self.events.append(events)
         else:
@@ -131,14 +131,13 @@ class EventBuffer:
     def get_event_rewards(self):
         return self.intrinsic_reward(np.ones(self.n), vector=True)
 
-'''
-buffer_0 = EventBufferSQLProxy(2, 100, 10, 0)
-buffer_1 = EventBufferSQLProxy(2, 100, 10, 1)
+
+buffer_0 = EventBufferSQLProxy(2, 100, 11, 0)
+buffer_1 = EventBufferSQLProxy(2, 100, 11, 1)
 for i in range(20):
     r0 = buffer_0.intrinsic_reward(np.ones(2), vector=True)
     r1 = buffer_1.intrinsic_reward(np.ones(2), vector=True)
     print("R0:", r0)
     print("R1:", r1)
-    buffer_0.record_events([1, i*10])
-    buffer_1.record_events([i*10, 1])
-'''
+    buffer_0.record_events([1, i*10], frame=i*100)
+    buffer_1.record_events([i*10, 1], frame=i*100)

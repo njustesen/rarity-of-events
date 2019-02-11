@@ -30,6 +30,7 @@ torch.manual_seed(args.seed)
 if args.cuda:
     torch.cuda.manual_seed(args.seed)
 
+
 def main():
     print("###############################################################")
     print("#################### VISDOOM LEARNER START ####################")
@@ -130,16 +131,12 @@ def main():
         rollouts.cuda()
 
     # Create event buffer
-    if not args.resume:
-        if args.qd:
-            event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id)
-        else:
-            event_buffer = EventBuffer(args.num_events, args.capacity)
+    if args.qd:
+        event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id)
+    elif not args.resume:
+        event_buffer = EventBuffer(args.num_events, args.capacity)
     else:
-        if args.qd:
-            event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id)
-        else:
-            event_buffer = pickle.load(open(log_file_name + "_event_buffer_temp.p", "rb"))
+        event_buffer = pickle.load(open(log_file_name + "_event_buffer_temp.p", "rb"))
 
     event_episode_rewards = []
 
@@ -194,7 +191,7 @@ def main():
 
             for i in range(args.num_processes):
                 if done[i]:
-                    event_buffer.record_events(np.copy(final_events[i].numpy()))
+                    event_buffer.record_events(np.copy(final_events[i].numpy()), frame=j*args.num_steps)
 
             episode_rewards *= masks
             episode_intrinsic_rewards *= masks

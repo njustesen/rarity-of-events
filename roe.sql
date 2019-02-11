@@ -2,6 +2,7 @@ CREATE TABLE Event (
     EventID int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     ExperimentID int,
     ActorID int,
+    Frame int,
     Event0 float DEFAULT 0.0,
   	Event1 float DEFAULT 0.0,
     Event2 float DEFAULT 0.0,
