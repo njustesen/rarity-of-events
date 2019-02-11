@@ -6,7 +6,7 @@ import mysql.connector
 
 class EventBufferSQLProxy:
 
-    def __init__(self, n, capacity, exp_id, actor_id, user='roe', password='RarityOfEvents', host='localhost', database='RoE', event_clip=0.01):
+    def __init__(self, n, capacity, exp_id, actor_id, user='roe', password='RarityOfEvents', host='localhost', database='roe', event_clip=0.01):
         self.n = n
         self.exp_id = exp_id
         self.actor_id = actor_id

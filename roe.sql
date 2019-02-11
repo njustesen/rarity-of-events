@@ -26,4 +26,5 @@ CREATE TABLE Event (
     Event20 float DEFAULT 0.0
 );
 
-CREATE USER 'roe'@'localhost' IDENTIFIED BY 'RarityOfEvents';
+CREATE USER roe@localhost IDENTIFIED BY 'RarityOfEvents';
+GRANT ALL PRIVILEGES ON *.* TO roe@localhost WITH GRANT OPTION;
