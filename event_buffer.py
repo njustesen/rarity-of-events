@@ -32,9 +32,9 @@ class EventBufferSQLProxy:
         cmd += ")"
         cmd += " VALUES ({}, {}, {}".format(self.exp_id, self.actor_id, frame)
         for i in range(len(events)):
-            cmd += ", %s"
+            cmd += ", " + str(events[i])
         cmd += ")"
-        mycursor.execute(cmd, events)
+        mycursor.execute(cmd)
         self.mydb.commit()
         self.cache = None
 
@@ -131,7 +131,7 @@ class EventBuffer:
     def get_event_rewards(self):
         return self.intrinsic_reward(np.ones(self.n), vector=True)
 
-
+'''
 buffer_0 = EventBufferSQLProxy(2, 100, 11, 0)
 buffer_1 = EventBufferSQLProxy(2, 100, 11, 1)
 for i in range(20):
@@ -141,3 +141,4 @@ for i in range(20):
     print("R1:", r1)
     buffer_0.record_events([1, i*10], frame=i*100)
     buffer_1.record_events([i*10, 1], frame=i*100)
+'''

@@ -1,6 +1,7 @@
 from vizdoom import *
 from arguments import get_args
 
+
 def add_game_vars(game):
     game.add_available_game_variable(GameVariable.AMMO0)
     game.add_available_game_variable(GameVariable.AMMO1)
@@ -31,7 +32,8 @@ def add_game_vars(game):
     game.add_available_game_variable(GameVariable.FRAGCOUNT)
     game.add_available_game_variable(GameVariable.HEALTH)
 
-def make_env(worker_id, config_file_path=None, visual=False, deathmatch=False):
+
+def make_env(worker_id, config_file_path=None, visual=False, deathmatch=False, bots=7):
     print("Initializing doom environment", worker_id, "...")
     game = DoomGame()
     game.load_config(config_file_path)
@@ -47,7 +49,7 @@ def make_env(worker_id, config_file_path=None, visual=False, deathmatch=False):
     game.set_window_visible(visual)
     game.init()
     if deathmatch:
-        for i in range(7):
+        for i in range(bots):
             game.send_game_command("addbot")
     return game
 

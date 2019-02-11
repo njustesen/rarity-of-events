@@ -36,7 +36,7 @@ def main():
     print("#################### VISDOOM LEARNER START ####################")
     print("###############################################################")
 
-    save_path = os.path.join(args.save_dir, args.algo)
+    save_path = os.path.join(args.save_dir, "a2c")
     num_updates = int(args.num_frames) // args.num_steps // args.num_processes
     reward_name = ""
     if args.roe:
@@ -165,7 +165,8 @@ def main():
 
             reward = torch.from_numpy(np.expand_dims(np.stack(reward), 1)).float()
             intrinsic_reward = torch.from_numpy(np.expand_dims(np.stack(intrinsic_reward), 1)).float()
-            events = torch.from_numpy(np.expand_dims(np.stack(events), args.num_events)).float()
+            #events = torch.from_numpy(np.expand_dims(np.stack(events), args.num_events)).float()
+            events = torch.from_numpy(events).float()
             episode_rewards += reward
             episode_intrinsic_rewards += intrinsic_reward
             episode_events += events
@@ -219,7 +220,6 @@ def main():
 
         rollouts.compute_returns(next_value, args.use_gae, args.gamma, args.tau)
 
-        
         values, action_log_probs, dist_entropy = actor_critic.evaluate_actions(Variable(rollouts.observations[:-1].view(-1, *obs_shape)), Variable(rollouts.actions.view(-1, action_shape)))
 
         values = values.view(args.num_steps, args.num_processes, 1)
@@ -260,31 +260,28 @@ def main():
             if args.cuda:
                 save_model = copy.deepcopy(actor_critic).cpu()
             torch.save(save_model, os.path.join(save_path, log_file_name + "_temp.pt"))
-            pickle.dump(event_buffer, open( log_file_name + "_event_buffer_temp.p", "wb" ))
+            if isinstance(event_buffer, EventBuffer):
+                pickle.dump(event_buffer, open( log_file_name + "_event_buffer_temp.p", "wb" ))
 
         if j % args.log_interval == 0:
 
             envs.log()
             end = time.time()
             total_num_steps = (j + 1) * args.num_processes * args.num_steps
-            log = "Updates {}, num timesteps {}, FPS {}, mean/max reward {:.5f}/{:.5f}, mean/max intrinsic reward {:.5f}/{:.5f}, entropy {:.5f}, value loss {:.5f}, policy loss {:.5f}"\
+            log = "Updates {}, num timesteps {}, FPS {}, mean/max reward {:.5f}/{:.5f}, mean/max intrinsic reward {:.5f}/{:.5f}"\
                 .format(j, total_num_steps,
                             int(total_num_steps / (end - start)),
                             final_rewards.mean(),
                             final_rewards.max(),
                             final_intrinsic_rewards.mean(),
-                            final_intrinsic_rewards.max(),
-                            dist_entropy.data[0],
-                            value_loss.data[0], action_loss.data[0])
-            log_to_file = "{}, {}, {:.5f}, {:.5f}, {:.5f}, {:.5f}, {:.5f}, {:.5f}, {:.5f}\n" \
+                            final_intrinsic_rewards.max()
+                        )
+            log_to_file = "{}, {}, {:.5f}, {:.5f}, {:.5f}, {:.5f}\n" \
                 .format(j, total_num_steps,
                         final_rewards.mean(),
                         final_rewards.std(),
                         final_intrinsic_rewards.mean(),
-                        final_intrinsic_rewards.std(),
-                        -dist_entropy.data[0],
-                        value_loss.data[0],
-                        action_loss.data[0])
+                        final_intrinsic_rewards.std())
             log_to_event_file = ','.join(map(str, event_buffer.get_event_mean().tolist()))  + "\n"
             log_to_event_reward_file = ','.join(map(str, event_buffer.get_event_rewards().tolist()))  + "\n"
             print(log)

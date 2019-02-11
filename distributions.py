@@ -21,7 +21,7 @@ class Categorical(nn.Module):
 
         probs = F.softmax(x)
         if deterministic is False:
-            action = probs.multinomial()
+            action = probs.multinomial(1)
         else:
             action = probs.max(1)[1]
         return action

@@ -27,7 +27,7 @@ class RolloutStorage(object):
         self.rewards[step].copy_(reward)
         self.masks[step].copy_(mask)
 
-    def compute_returns(self, next_value, use_gae, gamma, tau):
+    def compute_returns(self, next_value, use_gae, gamma, tau=0.1):
         if use_gae:
             self.value_preds[-1] = next_value
             gae = 0

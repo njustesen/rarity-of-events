@@ -31,6 +31,10 @@ def get_args():
                         help='ppo batch size (default: 64)')
     parser.add_argument('--clip-param', type=float, default=0.2,
                         help='ppo clip parameter (default: 0.2)')
+    parser.add_argument('--tau', type=float, default=0.1,
+                        help='ppo tau parameter -- NOT SET (default: 0.1)')
+    parser.add_argument('--use-gae', action='store_true', default=False,
+                        help='Whether to use gae for a2c -> ppo')
     parser.add_argument('--num-stack', type=int, default=1,
                         help='number of frames to stack (default: 1)')
     parser.add_argument('--log-interval', type=int, default=100,
@@ -53,10 +57,10 @@ def get_args():
                         help='directory to save agent logs (default: ./models/)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
-    parser.add_argument('--no-vis', action='store_true', default=False,
-                        help='disables visdom visualization')
     parser.add_argument('--resume', action='store_true', default=False,
                         help='Resume training')
+    parser.add_argument('--debug', action='store_true', default=False,
+                        help='Enable debugging')
     parser.add_argument('--shaped', action='store_true', default=False,
                         help='Trains using shaped intrinsic reward')
     parser.add_argument('--bots', action='store_true', default=False,
@@ -80,6 +84,5 @@ def get_args():
     args = parser.parse_args()
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
-    args.vis = not args.no_vis
 
     return args

@@ -8,12 +8,15 @@ from arguments import get_args
 
 args = get_args()
 
+
 # Processes Doom screen image to produce cropped and resized image. 
 def process_frame(frame):
     s = frame[10:-10,30:-30]
     s = scipy.misc.imresize(s,[84,84])
-    s = np.reshape(s,[np.prod(s.shape)]) / 255.0
+    #s = np.reshape(s,[np.prod(s.shape)]) / 255.0
+    s = [s / 255.0]
     return s
+
 
 def worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
@@ -104,12 +107,12 @@ def worker(remote, parent_remote, env_fn_wrapper):
             if vars[i] > last_vars[i]:
                 events[i + 1] = 1
 
-        # 15. Kill increase - for each weapon
+        # 15-24 Kill increase - for each weapon
         if vars[14] > last_vars[14]:
+            events[15] = 1
             for i in range(0, 9):
                 if vars[16] == i:  # If selected weapon
                     events[16 + i] = 1
-            events[15] = 1
 
         return events
 
