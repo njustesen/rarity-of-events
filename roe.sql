@@ -23,7 +23,12 @@ CREATE TABLE Event (
     Event17 float DEFAULT 0.0,
     Event18 float DEFAULT 0.0,
     Event19 float DEFAULT 0.0,
-    Event20 float DEFAULT 0.0
+    Event20 float DEFAULT 0.0,
+    Event21 float DEFAULT 0.0,
+    Event22 float DEFAULT 0.0,
+    Event23 float DEFAULT 0.0,
+    Event24 float DEFAULT 0.0,
+    Event25 float DEFAULT 0.0
 );
 
 CREATE USER roe@localhost IDENTIFIED BY 'RarityOfEvents';

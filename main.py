@@ -33,7 +33,7 @@ if args.cuda:
 
 def main():
     print("###############################################################")
-    print("#################### VISDOOM LEARNER START ####################")
+    print("#################### VIZDOOM LEARNER START ####################")
     print("###############################################################")
 
     save_path = os.path.join(args.save_dir, "a2c")
@@ -43,9 +43,9 @@ def main():
         reward_name = "_event"
     scenario_name = args.config_path.split("/")[1].split(".")[0]
     print("############### " + scenario_name + " ###############")
-    log_file_name = "vizdoom_" + scenario_name + reward_name + ".log"
-    log_event_file_name = "vizdoom_" + scenario_name + reward_name + ".eventlog"
-    log_event_reward_file_name = "vizdoom_" + scenario_name + reward_name + ".eventrewardlog"
+    log_file_name = "vizdoom_" + scenario_name + reward_name + "_" + str(args.agent_id) + ".log"
+    log_event_file_name = "vizdoom_" + scenario_name + reward_name + "_" + str(args.agent_id) + ".eventlog"
+    log_event_reward_file_name = "vizdoom_" + scenario_name + reward_name + "_" + str(args.agent_id) + ".eventrewardlog"
     start_updates = 0
     start_step = 0
     best_final_rewards = -1000000.0
