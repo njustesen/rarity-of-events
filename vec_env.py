@@ -12,7 +12,6 @@ args = get_args()
 # Processes Doom screen image to produce cropped and resized image. 
 def process_frame(frame):
     s = frame[10:-10,30:-30]
-    print(s.shape)
     s = scipy.misc.imresize(s,[84,84])
     #s = np.reshape(s,[np.prod(s.shape)]) / 255.0
     s = [s / 255.0]

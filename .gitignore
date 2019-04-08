@@ -17,3 +17,6 @@ logs/
 
 # Archives
 .zip
+
+.idea/
+.idea/*
