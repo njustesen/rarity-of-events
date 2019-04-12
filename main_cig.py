@@ -16,10 +16,11 @@ from torch.utils.data.sampler import BatchSampler, SubsetRandomSampler
 
 from event_buffer import EventBuffer, EventBufferSQLProxy
 from arguments import get_args
-from envs import make_env
-from vec_env import VecEnv
+from envs import make_env, make_cig_env
+from vec_env_cig import VecEnv
 from model import CNNPolicy
 from storage import RolloutStorage
+from vizdoom import *
 # from gif import make_gif
 
 envs = None
@@ -52,9 +53,41 @@ def main():
 
     os.environ['OMP_NUM_THREADS'] = '1'
 
-    cig = "cig" in args.config_path
+    # ---- DOOM Environments
+
+    # Host:
+    game = DoomGame()
+
+    # Use CIG example config or your own.
+    game.load_config("../../scenarios/cig.cfg")
+
+    game.set_doom_map("map01")  # Limited deathmatch.
+    #game.set_doom_map("map02")  # Full deathmatch.
+
+    # Host game with options that will be used in the competition.
+    game.add_game_args("-host 2 "               # This machine will function as a host for a multiplayer game with this many players (including this machine). It will wait for other machines to connect using the -join parameter and then start the game when everyone is connected.
+                    "-deathmatch "           # Deathmatch rules are used for the game.
+                    "+timelimit 10.0 "       # The game (episode) will end after this many minutes have elapsed.
+                    "+sv_forcerespawn 1 "    # Players will respawn automatically after they die.
+                    "+sv_noautoaim 1 "       # Autoaim is disabled for all players.
+                    "+sv_respawnprotect 1 "  # Players will be invulnerable for two second after spawning.
+                    "+sv_spawnfarthest 1 "   # Players will be spawned as far as possible from any other players.
+                    "+sv_nocrouch 1 "        # Disables crouching.
+                    "+viz_respawn_delay 10 " # Sets delay between respanws (in seconds).
+                    "+viz_nocheat 1")        # Disables depth and labels buffer and the ability to use commands that could interfere with multiplayer game.
+
+    # This can be used to host game without taking part in it (can be simply added as argument of vizdoom executable).
+    game.add_game_args("viz_spectator 1")
+
+    # During the competition, async mode will be forced for all agents.
+    game.set_mode(Mode.ASYNC_PLAYER)
+
+    # Start game
+    game.init()
+
+    # Clients:
     global envs
-    es = [make_env(i, args.config_path, visual=args.visual, cig=cig) for i in range(args.num_processes)]
+    es = [make_cig_env(i, visual=args.visual) for i in range(args.num_processes)]
     envs = VecEnv([
         es[i] for i in range(args.num_processes)
     ])
@@ -297,6 +330,7 @@ def main():
                 myfile.write(str(total_num_steps) + "," + log_to_event_reward_file)
 
     envs.close()
+    game.close()
     time.sleep(5)
 
 if __name__ == "__main__":

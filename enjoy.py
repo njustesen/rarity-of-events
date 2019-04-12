@@ -38,6 +38,14 @@ parser.add_argument('--record', action='store_true', default=False,
                     help='Record game (default: False)')
 parser.add_argument('--heatmap', action='store_true', default=False,
                     help='Saves data for heatmaps (default: False)')
+parser.add_argument('--agent-id', type=int, default=-1,
+                    help='agent id (default: -1)')
+parser.add_argument('--exp-id', type=int, default=-1,
+                    help='agent id (default: -1)')
+parser.add_argument('--num-processes', type=int, default=1,
+                        help='how many training CPU processes to use (default: 1)')
+parser.add_argument('--bots', action='store_true', default=False,
+                        help='Is the scenario with bots? (default: False)')
 args = parser.parse_args()
 
 try:
@@ -45,7 +53,11 @@ try:
 except OSError:
     pass
 
-envs = VecEnv([make_env(0, config_file_path=args.config_path, visual=args.demo)], record=args.record)
+global envs
+es = [make_env(i, args.config_path, visual=args.demo, bots=args.bots) for i in range(args.num_processes)]
+envs = VecEnv([
+    es[i] for i in range(args.num_processes)
+])
 
 scenario = args.config_path.split("/")[1].split(".")[0]
 exp_name = scenario + ("_event" if args.roe else "")
@@ -54,13 +66,16 @@ print("Scenario: " + scenario)
 print("Experiment: " + exp_name)
 
 if args.roe:
-    model_name = args.algo + "/vizdoom_" + scenario.split("-")[0] + "_event"
+    if args.exp_id >= 0:
+        model_name = f"{args.algo}/vizdoom_{scenario.split('-')[0]}_event_{args.exp_id}_{args.agent_id}"
+    else:
+        model_name = args.algo + "/vizdoom_" + scenario.split("-")[0] + "_event"
 else:
     model_name = args.algo + "/vizdoom_" + scenario.split("-")[0]
 
-print("Model: " + model_name)
+print("Loading model", model_name)
 actor_critic = torch.load(os.path.join(args.load_dir, model_name + ".pt"))
-
+print("Model loaded")
 actor_critic.eval()
 
 obs_shape = envs.observation_space_shape
@@ -80,7 +95,9 @@ def update_current_obs(obs):
         current_obs[:, :-shape_dim0] = current_obs[:, shape_dim0:]
     current_obs[:, -shape_dim0:] = obs
 
+print("Resetting")
 obs = envs.reset()
+print("Reset")
 update_current_obs(obs)
 #vars = envs.get_all_game_variables()
 #vars = torch.from_numpy(to_input_vars(vars)).float()
@@ -101,6 +118,8 @@ positions = []
 positions_episode = []
 position = envs.get_position()[0]
 positions_episode.append(position)
+
+print("Starting")
 
 while episode_cnt < num_episodes:
     if args.demo:

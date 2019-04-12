@@ -43,18 +43,17 @@ def main():
         reward_name = "_event"
     scenario_name = args.config_path.split("/")[1].split(".")[0]
     print("############### " + scenario_name + " ###############")
-    log_file_name = "log/vizdoom_" + scenario_name + reward_name + "_" + str(args.agent_id) + ".log"
-    log_event_file_name = "log/vizdoom_" + scenario_name + reward_name + "_" + str(args.agent_id) + ".eventlog"
-    log_event_reward_file_name = "log/vizdoom_" + scenario_name + reward_name + "_" + str(args.agent_id) + ".eventrewardlog"
+    log_file_name = "vizdoom_" + scenario_name + reward_name + "_" + str(args.agent_id) + ".log"
+    log_event_file_name = "vizdoom_" + scenario_name + reward_name + "_" + str(args.agent_id) + ".eventlog"
+    log_event_reward_file_name = "vizdoom_" + scenario_name + reward_name + "_" + str(args.agent_id) + ".eventrewardlog"
     start_updates = 0
     start_step = 0
     best_final_rewards = -1000000.0
 
     os.environ['OMP_NUM_THREADS'] = '1'
 
-    cig = "cig" in args.config_path
     global envs
-    es = [make_env(i, args.config_path, visual=args.visual, cig=cig) for i in range(args.num_processes)]
+    es = [make_env(i, args.config_path, visual=args.visual, bots=args.bots) for i in range(args.num_processes)]
     envs = VecEnv([
         es[i] for i in range(args.num_processes)
     ])
@@ -65,7 +64,8 @@ def main():
     if args.resume:
         actor_critic = torch.load(os.path.join(save_path, log_file_name + ".pt"))
         filename = glob.glob(os.path.join(args.log_dir, log_file_name))[0]
-        #if args.roe:
+        if args.roe:
+            e
             # TODO: Load event buffer
         with open(filename) as file:
             lines = file.readlines()

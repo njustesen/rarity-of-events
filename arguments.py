@@ -3,6 +3,9 @@ import argparse
 import torch
 
 
+# python main.py --roe --qd --exp-id 1000 --agent-id 1 --num-processes 6 --config-path ./scenarios/deathmatch.cfg --num-frames 75e6
+
+
 def get_args():
     parser = argparse.ArgumentParser(description='RL')
     parser.add_argument('--lr', type=float, default=7e-4,
@@ -63,8 +66,6 @@ def get_args():
                         help='Enable debugging')
     parser.add_argument('--shaped', action='store_true', default=False,
                         help='Trains using shaped intrinsic reward')
-    parser.add_argument('--bots', action='store_true', default=False,
-                        help='Is the scenario with bots? (default: False)')
     parser.add_argument('--roe', action='store_true', default=False,
                         help='Trains using Rairty of Events (default: False)')
     parser.add_argument('--visual', action='store_true', default=False,

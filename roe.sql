@@ -1,3 +1,7 @@
+CREATE DATABASE roe;
+
+USE roe;
+
 CREATE TABLE Event (
     EventID int NOT NULL AUTO_INCREMENT PRIMARY KEY,
     ExperimentID int,

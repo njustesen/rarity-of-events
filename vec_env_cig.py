@@ -139,7 +139,7 @@ def worker(remote, parent_remote, env_fn_wrapper):
             reward = reward / 100.0                                 # normalizing the reward
             episode_reward += reward
             step_cnt += 1
-            done = env.is_episode_finished() or env.is_player_dead()
+            done = env.is_episode_finished()
             if done:
                 total_kills += episode_kills
                 env.new_episode()
