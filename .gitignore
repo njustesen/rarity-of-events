@@ -20,3 +20,17 @@ logs/
 
 .idea/
 .idea/*
+
+models/*
+log/*
+
+plots/*
+plots/
+
+*.log
+*.eventlog
+*event_buffer_temp.p
+*.eventrewardlog
+
+.vscode/
+.idea/

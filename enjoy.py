@@ -32,7 +32,7 @@ parser.add_argument('--log-dir', default='/tmp/doom/',
                     help='directory to save agent logs (default: /tmp/doom)')
 parser.add_argument('--roe', action='store_true', default=False,
                     help='Loads the RoE model (default: False)')
-parser.add_argument('--demo', action='store_true', default=True,
+parser.add_argument('--visual', action='store_true', default=True,
                     help='Play in real-time with visuals (default: False)')
 parser.add_argument('--record', action='store_true', default=False,
                     help='Record game (default: False)')
@@ -53,8 +53,9 @@ try:
 except OSError:
     pass
 
+cig = "cig" in args.config_path
 global envs
-es = [make_env(i, args.config_path, visual=args.demo, bots=args.bots) for i in range(args.num_processes)]
+es = [make_env(i, args.config_path, visual=args.visual, cig=cig) for i in range(args.num_processes)]
 envs = VecEnv([
     es[i] for i in range(args.num_processes)
 ])
@@ -122,7 +123,7 @@ positions_episode.append(position)
 print("Starting")
 
 while episode_cnt < num_episodes:
-    if args.demo:
+    if args.visual:
         sleep(1/24)
 
     # Save frames

@@ -132,12 +132,7 @@ def main():
         rollouts.cuda()
 
     # Create event buffer
-    if args.qd:
-        event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id)
-    elif not args.resume:
-        event_buffer = EventBuffer(args.num_events, args.capacity)
-    else:
-        event_buffer = pickle.load(open(log_file_name + "_event_buffer_temp.p", "rb"))
+    event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id, qd=args.qd)
 
     event_episode_rewards = []
 
@@ -193,7 +188,7 @@ def main():
 
             for i in range(args.num_processes):
                 if done[i]:
-                    event_buffer.record_events(np.copy(final_events[i].numpy()), frame=j*args.num_steps)
+                    event_buffer.record_events(np.copy(final_events[i].numpy()), frame=j*args.num_steps*args.num_processes)
 
             episode_rewards *= masks
             episode_intrinsic_rewards *= masks

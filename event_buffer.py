@@ -6,7 +6,7 @@ import mysql.connector
 
 class EventBufferSQLProxy:
 
-    def __init__(self, n, capacity, exp_id, actor_id, user='roe', password='RarityOfEvents', host='localhost', database='roe', event_clip=0.01):
+    def __init__(self, n, capacity, exp_id, actor_id, user='roe', password='RarityOfEvents', host='localhost', database='roe', event_clip=0.01, qd=False):
         self.n = n
         self.exp_id = exp_id
         self.actor_id = actor_id
@@ -23,6 +23,7 @@ class EventBufferSQLProxy:
             database=database
         )
         self.cache = None
+        self.qd = qd
         
     def record_events(self, events, frame):
         mycursor = self.mydb.cursor()
@@ -45,7 +46,10 @@ class EventBufferSQLProxy:
             if i > 0:
                 rows += ", "
             rows += "Event{}".format(i)
-        cmd = "SELECT " + rows + " FROM Event WHERE ExperimentID = {} AND ActorID != {} ORDER BY EventID DESC LIMIT {}".format(self.exp_id, self.actor_id, self.capacity)
+        others = -1
+        if self.qd:
+            others = self.actor_id
+        cmd = "SELECT " + rows + " FROM Event WHERE ExperimentID = {} AND ActorID != {} ORDER BY EventID DESC LIMIT {}".format(self.exp_id, others, self.capacity)
         mycursor.execute(cmd)
         results = mycursor.fetchall()
         events = []
@@ -63,7 +67,7 @@ class EventBufferSQLProxy:
             if i > 0:
                 rows += ", "
             rows += "Event{}".format(i)
-        cmd = f"SELECT Frame, {rows} FROM Event WHERE ExperimentID = {self.exp_id} AND ActorID = {self.actor_id} ORDER BY EventID"
+        cmd = f"SELECT Frame, {rows} FROM Event WHERE ExperimentID = {self.exp_id} AND ActorID = {self.actor_id} ORDER BY EventID ASC"
         mycursor.execute(cmd)
         results = mycursor.fetchall()
         return results
