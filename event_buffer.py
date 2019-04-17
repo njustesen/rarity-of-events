@@ -55,6 +55,18 @@ class EventBufferSQLProxy:
             else:
                 break
         return events
+    
+    def get_own_events(self):
+        mycursor = self.mydb.cursor()
+        rows = ""
+        for i in range(self.n):
+            if i > 0:
+                rows += ", "
+            rows += "Event{}".format(i)
+        cmd = f"SELECT Frame, {rows} FROM Event WHERE ExperimentID = {self.exp_id} AND ActorID = {self.actor_id} ORDER BY EventID"
+        mycursor.execute(cmd)
+        results = mycursor.fetchall()
+        return results
 
     def intrinsic_reward(self, events, vector=False):
         if self.cache is None:
