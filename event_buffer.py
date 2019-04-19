@@ -67,6 +67,7 @@ class EventBufferSQLProxy:
             if i > 0:
                 rows += ", "
             rows += "Event{}".format(i)
+        #cmd = f"SELECT Frame, unix_timestamp(Timestamp), {rows} FROM Event WHERE ExperimentID = {self.exp_id} AND ActorID = {self.actor_id} ORDER BY EventID ASC"
         cmd = f"SELECT Frame, {rows} FROM Event WHERE ExperimentID = {self.exp_id} AND ActorID = {self.actor_id} ORDER BY EventID ASC"
         mycursor.execute(cmd)
         results = mycursor.fetchall()

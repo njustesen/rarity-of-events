@@ -7,6 +7,7 @@ CREATE TABLE Event (
     ExperimentID int,
     ActorID int,
     Frame int,
+    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Event0 float DEFAULT 0.0,
   	Event1 float DEFAULT 0.0,
     Event2 float DEFAULT 0.0,
