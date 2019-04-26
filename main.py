@@ -5,6 +5,7 @@ import time
 import sys
 import signal
 import pickle
+import uuid
 
 import numpy as np
 import torch
@@ -36,7 +37,7 @@ def main():
     print("#################### VIZDOOM LEARNER START ####################")
     print("###############################################################")
 
-    save_path = os.path.join(args.save_dir, "a2c")
+    save_path = os.path.join(args.save_dir, str(args.exp_id))
     num_updates = int(args.num_frames) // args.num_steps // args.num_processes
     reward_name = ""
     if args.roe:
@@ -131,6 +132,63 @@ def main():
         current_obs = current_obs.cuda()
         rollouts.cuda()
 
+    def mean_distance_to_nearest_neighbor(elite_events):
+        d = []
+        nearest = None
+        for a in range(len(elite_events)):
+            for b in range(len(elite_events)):
+                if a != b:
+                    elite_a = elite_events[a]
+                    elite_b = elite_events[b]
+                    dist = np.linalg.norm(elite_a - elite_b)
+                    if nearest is None or dist < nearest:
+                        nearest = dist
+            if nearest is not None:
+                d.append(nearest)
+            nearest = None
+        return np.mean(d)
+
+    def distance_to_nearest_neighbor(elite_events, events):
+        nearest = None
+        for elite_a in elite_events:
+            dist = np.linalg.norm(elite_a - events)
+            if nearest is None or dist < nearest:
+                nearest = dist
+        return nearest
+
+    def add_to_archive(frame):
+        try:
+            os.makedirs(save_path)
+        except OSError:
+            pass
+        fitness = final_rewards.mean()
+        behavior = event_buffer.get_last_own_events_mean(len(final_rewards))
+        max_events = event_buffer.get_max_events()
+        if len(max_events) > 0:
+            max_events = np.maximum(max_events, behavior)
+            normalized_behavior = np.divide(behavior, max_events)
+            normalized_behavior = np.nan_to_num(normalized_behavior)
+            elite_behaviors = event_buffer.get_elite_behaviors()
+            if len(elite_behaviors) > 0:
+                normalized_elite_behaviors = []
+                for elite_behavior in elite_behaviors:
+                    normalized = np.divide(elite_behavior, max_events)
+                    normalized = np.nan_to_num(normalized)
+                    normalized_elite_behaviors.append(normalized)
+                # print("normalized_elite_behaviors:", normalized_elite_behaviors)
+                neighborhood_spread = mean_distance_to_nearest_neighbor(normalized_elite_behaviors)
+                novelty = distance_to_nearest_neighbor(normalized_elite_behaviors, normalized_behavior)
+                print("neighborhood_spread:", neighborhood_spread)
+                print("novelty:", novelty)
+        if (len(max_events) == 0 or len(elite_behaviors) < 10) or neighborhood_spread < novelty:
+            print("Adding elite")
+            name = str(uuid.uuid1())
+            event_buffer.add_elite(name, behavior, fitness, frame)
+            save_model = actor_critic
+            if args.cuda:
+                save_model = copy.deepcopy(actor_critic).cpu()
+            torch.save(save_model, os.path.join(save_path, f"{name}_.pt"))
+
     # Create event buffer
     event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id, qd=args.qd)
 
@@ -189,6 +247,7 @@ def main():
             for i in range(args.num_processes):
                 if done[i]:
                     event_buffer.record_events(np.copy(final_events[i].numpy()), frame=j*args.num_steps*args.num_processes)
+                    add_to_archive(step)
 
             episode_rewards *= masks
             episode_intrinsic_rewards *= masks
@@ -233,31 +292,6 @@ def main():
         optimizer.step()
 
         rollouts.observations[0].copy_(rollouts.observations[-1])
-
-        if final_rewards.mean() > best_final_rewards and not args.debug:
-            try:
-                os.makedirs(save_path)
-            except OSError:
-                pass
-            best_final_rewards = final_rewards.mean()
-            save_model = actor_critic
-            if args.cuda:
-                save_model = copy.deepcopy(actor_critic).cpu()
-            torch.save(save_model, os.path.join(save_path, log_file_name.split(".log")[0] + ".pt"))
-
-        if j % args.save_interval == 0 and args.save_dir != "" and not args.debug:
-            try:
-                os.makedirs(save_path)
-            except OSError:
-                pass
-
-            # A really ugly way to save a model to CPU
-            save_model = actor_critic
-            if args.cuda:
-                save_model = copy.deepcopy(actor_critic).cpu()
-            torch.save(save_model, os.path.join(save_path, log_file_name + "_temp.pt"))
-            if isinstance(event_buffer, EventBuffer):
-                pickle.dump(event_buffer, open( log_file_name + "_event_buffer_temp.p", "wb" ))
 
         if j % args.log_interval == 0:
 

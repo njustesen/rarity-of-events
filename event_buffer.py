@@ -73,6 +73,61 @@ class EventBufferSQLProxy:
         results = mycursor.fetchall()
         return results
 
+    def add_elite(self, name, events, fitness, frame):
+        mycursor = self.mydb.cursor()
+        cmd = "INSERT INTO Archive (EliteID, ExperimentID, ActorID, Fitness, Frame"
+        for i in range(len(events)):
+            cmd += f", Event{i}"
+        cmd += ")"
+        cmd += f" VALUES ('{name}', {self.exp_id}, {self.actor_id}, {fitness}, {frame}"
+        for i in range(len(events)):
+            cmd += ", " + str(events[i])
+        cmd += ")"
+        # print(cmd)
+        mycursor.execute(cmd)
+        self.mydb.commit()
+        self.cache = None
+
+    def get_elite_behaviors(self):
+        mycursor = self.mydb.cursor()
+        rows = ""
+        for i in range(self.n):
+            if i > 0:
+                rows += ", "
+            rows += "Event{}".format(i)
+        cmd = f"SELECT {rows} FROM Archive WHERE ExperimentID = {self.exp_id}"
+        mycursor.execute(cmd)
+        results = mycursor.fetchall()
+        return results
+
+    def get_last_own_events_mean(self, n):
+        mycursor = self.mydb.cursor()
+        rows = ""
+        for i in range(self.n):
+            if i > 0:
+                rows += ", "
+            rows += "Event{}".format(i)
+        #cmd = f"SELECT Frame, unix_timestamp(Timestamp), {rows} FROM Event WHERE ExperimentID = {self.exp_id} AND ActorID = {self.actor_id} ORDER BY EventID ASC"
+        cmd = f"SELECT {rows} FROM Event WHERE ExperimentID = {self.exp_id} AND ActorID = {self.actor_id} ORDER BY EventID DESC LIMIT {n}"
+        mycursor.execute(cmd)
+        results = mycursor.fetchall()
+        return np.mean(results, axis=0)
+
+    def get_max_events(self):
+        mycursor = self.mydb.cursor()
+        rows = ""
+        for i in range(self.n):
+            if i > 0:
+                rows += ", "
+            rows += "MAX(Event{})".format(i)
+        #cmd = f"SELECT Frame, unix_timestamp(Timestamp), {rows} FROM Event WHERE ExperimentID = {self.exp_id} AND ActorID = {self.actor_id} ORDER BY EventID ASC"
+        cmd = f"SELECT {rows} FROM Event WHERE ActorID = {self.actor_id}"
+        mycursor.execute(cmd)
+        results = mycursor.fetchall()
+        if len(results) == 0:
+            return []
+        return np.mean(results, axis=0)
+
     def intrinsic_reward(self, events, vector=False):
         if self.cache is None:
             e = self.get_events()
