@@ -70,10 +70,14 @@ def get_args():
                         help='Trains using Rairty of Events (default: False)')
     parser.add_argument('--visual', action='store_true', default=False,
                         help='Trains with visuals (default: False)')
-    parser.add_argument('--num-events', type=int, default=26,
-                        help='number of events to record (default: 26)')
-    parser.add_argument('--capacity', type=int, default=100,
-                        help='Size of the event buffer (default: 100)')
+    parser.add_argument('--num-events', type=int, default=11,
+                        help='number of events to record (default: 11)')
+    #parser.add_argument('--num-events', type=int, default=25,
+    #                    help='number of events to record (default: 25)')
+    parser.add_argument('--num-beh-events', type=int, default=11,
+                        help='number of events to record (default: 25)')
+    parser.add_argument('--capacity', type=int, default=1000000,
+                        help='Size of the event buffer (default: 1000000)')
     parser.add_argument('--num-vars', type=int, default=17,
                         help='number of vars to record (default: 17)')
     parser.add_argument('--qd', action='store_true', default=False,

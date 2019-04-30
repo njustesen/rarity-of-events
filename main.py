@@ -162,32 +162,36 @@ def main():
         except OSError:
             pass
         fitness = final_rewards.mean()
-        behavior = event_buffer.get_last_own_events_mean(len(final_rewards))
-        max_events = event_buffer.get_max_events()
-        if len(max_events) > 0:
-            max_events = np.maximum(max_events, behavior)
-            normalized_behavior = np.divide(behavior, max_events)
-            normalized_behavior = np.nan_to_num(normalized_behavior)
-            elite_behaviors = event_buffer.get_elite_behaviors()
-            if len(elite_behaviors) > 0:
-                normalized_elite_behaviors = []
-                for elite_behavior in elite_behaviors:
-                    normalized = np.divide(elite_behavior, max_events)
-                    normalized = np.nan_to_num(normalized)
-                    normalized_elite_behaviors.append(normalized)
-                # print("normalized_elite_behaviors:", normalized_elite_behaviors)
-                neighborhood_spread = mean_distance_to_nearest_neighbor(normalized_elite_behaviors)
-                novelty = distance_to_nearest_neighbor(normalized_elite_behaviors, normalized_behavior)
-                print("neighborhood_spread:", neighborhood_spread)
-                print("novelty:", novelty)
-        if (len(max_events) == 0 or len(elite_behaviors) < 10) or neighborhood_spread < novelty:
-            print("Adding elite")
+        behavior = event_buffer.get_last_own_events_mean(len(final_rewards))  # From event buffer
+        print("Fitness:", fitness)
+        print("Behavior:", behavior)
+        neighbors = event_buffer.get_neighbors(behavior)
+        if len(neighbors) == 0:
+            add = True
+            print("- Cell empty")
+        else:
+            add = True
+            for neighbor in neighbors:
+                if fitness < neighbor.fitness:
+                    add = False
+                    print("- Competition lost")
+                    break
+        if add:
+            if len(neighbors) > 0:
+                event_buffer.remove_elites(neighbors)
+                print(f"- Removing elites {[neighbor.elite_id for neighbor in neighbors]}")
+            for neighbor in neighbors:
+                try:
+                    print(f"- Deleting model {neighbor.elite_id}")
+                    os.remove(os.path.join(save_path, f"{neighbor.elite_id}.pt"))
+                except:
+                    print("Error while deleting model with id : ", neighbor.elite_id)
             name = str(uuid.uuid1())
             event_buffer.add_elite(name, behavior, fitness, frame)
             save_model = actor_critic
             if args.cuda:
                 save_model = copy.deepcopy(actor_critic).cpu()
-            torch.save(save_model, os.path.join(save_path, f"{name}_.pt"))
+            torch.save(save_model, os.path.join(save_path, f"{name}.pt"))
 
     # Create event buffer
     event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id, qd=args.qd)
@@ -306,24 +310,7 @@ def main():
                             final_intrinsic_rewards.mean(),
                             final_intrinsic_rewards.max()
                         )
-            log_to_file = "{}, {}, {:.5f}, {:.5f}, {:.5f}, {:.5f}\n" \
-                .format(j, total_num_steps,
-                        final_rewards.mean(),
-                        final_rewards.std(),
-                        final_intrinsic_rewards.mean(),
-                        final_intrinsic_rewards.std())
-            log_to_event_file = ','.join(map(str, event_buffer.get_event_mean().tolist()))  + "\n"
-            log_to_event_reward_file = ','.join(map(str, event_buffer.get_event_rewards().tolist()))  + "\n"
             print(log)
-            print(log_to_event_file)
-
-            # Save to files
-            with open(log_file_name, "a") as myfile:
-                myfile.write(log_to_file)
-            with open(log_event_file_name, "a") as myfile:
-                myfile.write(str(total_num_steps) + "," + log_to_event_file)
-            with open(log_event_reward_file_name, "a") as myfile:
-                myfile.write(str(total_num_steps) + "," + log_to_event_reward_file)
 
     envs.close()
     time.sleep(5)

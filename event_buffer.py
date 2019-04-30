@@ -4,6 +4,13 @@ import math
 import mysql.connector
 
 
+class Elite:
+
+    def __init__(self, elite_id, fitness):
+        self.elite_id = elite_id
+        self.fitness = fitness
+
+
 class EventBufferSQLProxy:
 
     def __init__(self, n, capacity, exp_id, actor_id, user='roe', password='RarityOfEvents', host='localhost', database='roe', event_clip=0.01, qd=False):
@@ -49,15 +56,10 @@ class EventBufferSQLProxy:
         others = -1
         if self.qd:
             others = self.actor_id
-        cmd = "SELECT " + rows + " FROM Event WHERE ExperimentID = {} AND ActorID != {} ORDER BY EventID DESC LIMIT {}".format(self.exp_id, others, self.capacity)
+        cmd = "SELECT " + rows + " FROM Archive WHERE ExperimentID = {} AND ActorID != {} ORDER BY EliteID DESC LIMIT {}".format(self.exp_id, others, self.capacity)
         mycursor.execute(cmd)
         results = mycursor.fetchall()
-        events = []
-        for x in results:
-            if len(events) < self.capacity:
-                events.append(x)
-            else:
-                break
+        events = results
         return events
     
     def get_own_events(self):
@@ -83,7 +85,6 @@ class EventBufferSQLProxy:
         for i in range(len(events)):
             cmd += ", " + str(events[i])
         cmd += ")"
-        # print(cmd)
         mycursor.execute(cmd)
         self.mydb.commit()
         self.cache = None
@@ -121,12 +122,53 @@ class EventBufferSQLProxy:
                 rows += ", "
             rows += "MAX(Event{})".format(i)
         #cmd = f"SELECT Frame, unix_timestamp(Timestamp), {rows} FROM Event WHERE ExperimentID = {self.exp_id} AND ActorID = {self.actor_id} ORDER BY EventID ASC"
-        cmd = f"SELECT {rows} FROM Event WHERE ActorID = {self.actor_id}"
+        cmd = f"SELECT {rows} FROM Archive"
         mycursor.execute(cmd)
         results = mycursor.fetchall()
         if len(results) == 0:
             return []
         return np.mean(results, axis=0)
+
+    def get_neighbors(self, behavior):
+        # Get bounds
+        mycursor = self.mydb.cursor()
+        rows = ""
+        for i in range(self.n):
+            if i > 0:
+                rows += ", "
+            rows += "MAX(Event{})".format(i)
+        cmd = f"SELECT {rows} FROM Archive"
+        mycursor.execute(cmd)
+        maxes = mycursor.fetchall()
+
+        # Get neighbors
+        where_rows = ""
+        for i in range(self.n):
+            min_event = 0
+            max_event = maxes[0][i]
+            cell_size = (max_event - min_event) / 10
+            distance = cell_size / 2
+            if i > 0:
+                where_rows += " AND "
+            where_rows += f"Event{i} >= {behavior[i] - distance} AND Event{i} <= {behavior[i] + distance}"
+        cmd = f"SELECT Fitness, EliteID FROM Archive WHERE {where_rows}"
+        mycursor.execute(cmd)
+        results = mycursor.fetchall()
+        elites = []
+        for result in results:
+            elites.append(Elite(result[-1], result[-2]))
+        return elites
+
+    def remove_elites(self, elites):
+        mycursor = self.mydb.cursor()
+        rows = "("
+        for i in range(len(elites)):
+            if i > 0:
+                rows += ", "
+            rows += f"'{elites[i].elite_id}'"
+        rows += ")"
+        cmd = f"DELETE FROM Archive where EliteID in {rows}"
+        mycursor.execute(cmd)
 
     def intrinsic_reward(self, events, vector=False):
         if self.cache is None:

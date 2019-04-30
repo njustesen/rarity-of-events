@@ -109,12 +109,35 @@ def worker(remote, parent_remote, env_fn_wrapper):
 
         # 15-24 Kill increase - for each weapon
         if vars[14] > last_vars[14]:
-            events[15] = 1
+            # events[15] = 1
             for i in range(0, 9):
                 if vars[16] == i:  # If selected weapon
-                    events[16 + i] = 1
+                    events[15 + i] = 1
 
         return events
+
+    def get_behavioral_events(vars, last_vars):
+
+        beh_events = np.zeros(args.num_beh_events)
+
+        if np.count_nonzero(last_vars) == 0:
+            return beh_events
+
+        # If died -> no event
+        if vars[15] > last_vars[15]:
+            return beh_events
+
+        # 0. Movement
+        if vars[0] > last_vars[0]:
+            beh_events[0] = 1
+
+        # 15-24 Kill increase - for each weapon
+        if vars[14] > last_vars[14]:
+            for i in range(0, 9):
+                if vars[14] == i:  # If selected weapon
+                    beh_events[1+i] = 1
+
+        return beh_events
 
     while True:
         cmd, data = remote.recv()
@@ -132,7 +155,8 @@ def worker(remote, parent_remote, env_fn_wrapper):
                    env.get_game_variable(GameVariable.POSITION_Y)]
             position_history.append(pos)
             vars = get_vizdoom_vars(env, position_history)
-            events = get_events(vars, last_vars)
+            events = get_behavioral_events(vars, last_vars)
+            #beh_events = get_beh_events(vars, last_vars)
             if not env.is_episode_finished():
                 ob = process_frame(env.get_state().screen_buffer)
                 episode_kills = vars[14]
