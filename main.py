@@ -163,26 +163,26 @@ def main():
             pass
         fitness = final_rewards.mean()
         behavior = event_buffer.get_last_own_events_mean(len(final_rewards))  # From event buffer
-        print("Fitness:", fitness)
-        print("Behavior:", behavior)
+        #print("Fitness:", fitness)
+        #print("Behavior:", behavior)
         neighbors = event_buffer.get_neighbors(behavior)
         if len(neighbors) == 0:
             add = True
-            print("- Cell empty")
+            #print("- Cell empty")
         else:
             add = True
             for neighbor in neighbors:
                 if fitness < neighbor.fitness:
                     add = False
-                    print("- Competition lost")
+                    #print("- Competition lost")
                     break
         if add:
             if len(neighbors) > 0:
                 event_buffer.remove_elites(neighbors)
-                print(f"- Removing elites {[neighbor.elite_id for neighbor in neighbors]}")
+                #print(f"- Removing elites {[neighbor.elite_id for neighbor in neighbors]}")
             for neighbor in neighbors:
                 try:
-                    print(f"- Deleting model {neighbor.elite_id}")
+                    #print(f"- Deleting model {neighbor.elite_id}")
                     os.remove(os.path.join(save_path, f"{neighbor.elite_id}.pt"))
                 except:
                     print("Error while deleting model with id : ", neighbor.elite_id)
