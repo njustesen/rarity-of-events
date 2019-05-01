@@ -161,11 +161,13 @@ def main():
             os.makedirs(save_path)
         except OSError:
             pass
-        fitness = final_rewards.mean()
-        behavior = event_buffer.get_last_own_events_mean(len(final_rewards))  # From event buffer
+        #print("Final rewards: ", final_rewards.numpy())
+        fitness = final_rewards.numpy().mean()
+        #behavior = event_buffer.get_last_own_events_mean(len(final_rewards))  # From event buffer
+        behavior = final_events.numpy().mean(axis=0)
         #print("Fitness:", fitness)
         #print("Behavior:", behavior)
-        neighbors = event_buffer.get_neighbors(behavior)
+        neighbors = event_buffer.get_neighbors(behavior, args.niche_divs)
         if len(neighbors) == 0:
             add = True
             #print("- Cell empty")
@@ -184,6 +186,7 @@ def main():
                 try:
                     #print(f"- Deleting model {neighbor.elite_id}")
                     os.remove(os.path.join(save_path, f"{neighbor.elite_id}.pt"))
+                    print("Successfully deleted model with id : ", neighbor.elite_id)
                 except:
                     print("Error while deleting model with id : ", neighbor.elite_id)
             name = str(uuid.uuid1())
@@ -250,8 +253,8 @@ def main():
 
             for i in range(args.num_processes):
                 if done[i]:
-                    event_buffer.record_events(np.copy(final_events[i].numpy()), frame=j*args.num_steps*args.num_processes)
-                    add_to_archive(step)
+                    #event_buffer.record_events(np.copy(final_events[i].numpy()), frame=j*args.num_steps*args.num_processes)
+                    add_to_archive(step*args.num_processes + j*args.num_steps*args.num_processes)
 
             episode_rewards *= masks
             episode_intrinsic_rewards *= masks

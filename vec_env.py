@@ -160,7 +160,7 @@ def worker(remote, parent_remote, env_fn_wrapper):
             if not env.is_episode_finished():
                 ob = process_frame(env.get_state().screen_buffer)
                 episode_kills = vars[14]
-            reward = reward / 100.0                                 # normalizing the reward
+            reward = reward / 100.0
             episode_reward += reward
             step_cnt += 1
             done = env.is_episode_finished() or env.is_player_dead()

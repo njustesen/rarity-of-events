@@ -129,7 +129,7 @@ class EventBufferSQLProxy:
             return []
         return np.mean(results, axis=0)
 
-    def get_neighbors(self, behavior):
+    def get_neighbors(self, behavior, niche_divs):
         # Get bounds
         mycursor = self.mydb.cursor()
         rows = ""
@@ -137,7 +137,7 @@ class EventBufferSQLProxy:
             if i > 0:
                 rows += ", "
             rows += "MAX(Event{})".format(i)
-        cmd = f"SELECT {rows} FROM Archive"
+        cmd = f"SELECT {rows} FROM Archive WHERE ExperimentID = {self.exp_id}"
         mycursor.execute(cmd)
         maxes = mycursor.fetchall()
 
@@ -146,12 +146,13 @@ class EventBufferSQLProxy:
         for i in range(self.n):
             min_event = 0
             max_event = maxes[0][i]
-            cell_size = (max_event - min_event) / 10
+            max_event = max(behavior[i], max_event) if max_event is not None else behavior[i]
+            cell_size = (max_event - min_event) / niche_divs
             distance = cell_size / 2
             if i > 0:
                 where_rows += " AND "
             where_rows += f"Event{i} >= {behavior[i] - distance} AND Event{i} <= {behavior[i] + distance}"
-        cmd = f"SELECT Fitness, EliteID FROM Archive WHERE {where_rows}"
+        cmd = f"SELECT Fitness, EliteID FROM Archive WHERE ExperimentID = {self.exp_id} AND {where_rows}"
         mycursor.execute(cmd)
         results = mycursor.fetchall()
         elites = []
@@ -167,7 +168,7 @@ class EventBufferSQLProxy:
                 rows += ", "
             rows += f"'{elites[i].elite_id}'"
         rows += ")"
-        cmd = f"DELETE FROM Archive where EliteID in {rows}"
+        cmd = f"DELETE FROM Archive where ExperimentID = {self.exp_id} AND EliteID in {rows}"
         mycursor.execute(cmd)
 
     def intrinsic_reward(self, events, vector=False):

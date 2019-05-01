@@ -75,7 +75,9 @@ def get_args():
     #parser.add_argument('--num-events', type=int, default=25,
     #                    help='number of events to record (default: 25)')
     parser.add_argument('--num-beh-events', type=int, default=11,
-                        help='number of events to record (default: 25)')
+                        help='number of events to record (default: 11)')
+    parser.add_argument('--niche-divs', type=int, default=5,
+                        help='number of events to record (default: 5)')
     parser.add_argument('--capacity', type=int, default=1000000,
                         help='Size of the event buffer (default: 1000000)')
     parser.add_argument('--num-vars', type=int, default=17,
