@@ -38,14 +38,16 @@ parser.add_argument('--record', action='store_true', default=False,
                     help='Record game (default: False)')
 parser.add_argument('--heatmap', action='store_true', default=False,
                     help='Saves data for heatmaps (default: False)')
-parser.add_argument('--agent-id', type=int, default=-1,
-                    help='agent id (default: -1)')
-parser.add_argument('--exp-id', type=int, default=-1,
-                    help='agent id (default: -1)')
 parser.add_argument('--num-processes', type=int, default=1,
                         help='how many training CPU processes to use (default: 1)')
 parser.add_argument('--bots', action='store_true', default=False,
                         help='Is the scenario with bots? (default: False)')
+parser.add_argument('--exp-id', type=int, required=True,
+                        help='Experiment ID')
+parser.add_argument('--agent-id', type=int, required=True,
+                    help='Experiment ID')
+parser.add_argument('--num-events', type=int, default=11,
+                        help='number of events to record (default: 11)')
 args = parser.parse_args()
 
 try:
@@ -64,18 +66,10 @@ scenario = args.config_path.split("/")[1].split(".")[0]
 exp_name = scenario + ("_event" if args.roe else "")
 
 print("Scenario: " + scenario)
-print("Experiment: " + exp_name)
 
-if args.roe:
-    if args.exp_id >= 0:
-        model_name = f"{args.algo}/vizdoom_{scenario.split('-')[0]}_event_{args.exp_id}_{args.agent_id}"
-    else:
-        model_name = args.algo + "/vizdoom_" + scenario.split("-")[0] + "_event"
-else:
-    model_name = args.algo + "/vizdoom_" + scenario.split("-")[0]
+actor_critic = torch.load("/Users/git/rarity-of-events/models/2/271b0e45-6c9b-11e9-8dad-005056a54761.pt")
+# actor_critic = torch.load("/Users/git/rarity-of-events/models/2/f399ade2-6d52-11e9-8dad-005056a54761.pt")
 
-print("Loading model", model_name)
-actor_critic = torch.load(os.path.join(args.load_dir, model_name + ".pt"))
 print("Model loaded")
 actor_critic.eval()
 
@@ -112,7 +106,7 @@ total_kills = []
 frame = 0
 
 deterministic = True
-num_of_events = 26
+num_of_events = 11
 episode_events = np.zeros(num_of_events)
 
 positions = []
@@ -153,9 +147,6 @@ while episode_cnt < num_episodes:
     position = envs.get_position()[0]
     positions_episode.append(position)
 
-    if events[0][15] > 0:
-        print("kill: " + str(events[0][15]))
-
     #vars = torch.from_numpy(np.array(to_input_vars(vars))).float()
     episode_reward += reward[0] * 100
     episode_events = episode_events + np.array(events[0])
@@ -169,7 +160,7 @@ while episode_cnt < num_episodes:
         episode_cnt += 1
         episode_reward = 0.0
         episode_game_variables = envs.get_all_game_variables()[0]
-        total_kills.append(episode_events[15])
+        #total_kills.append(episode_events[15])
         episode_events = np.zeros(num_of_events)
 
         obs = envs.reset()
@@ -187,7 +178,7 @@ print ('Std. dev reward:', np.std(total_rewards))
 print ('Avg kills:', np.mean(total_kills))
 print ('Std. dev. kills:', np.std(total_kills))
 
-heat_name = scenario + "_" + model_name + ".p"
+#heat_name = scenario + "_" + model_name + ".p"
 
 if args.heatmap:
     pickle.dump( positions, open( "./heat_data/" + exp_name, "wb" ) )

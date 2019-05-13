@@ -6,9 +6,11 @@ import mysql.connector
 
 class Elite:
 
-    def __init__(self, elite_id, fitness):
+    def __init__(self, elite_id, fitness, actor=-1, events=None):
         self.elite_id = elite_id
         self.fitness = fitness
+        self.actor = actor
+        self.events = events if events is not None else []
 
 
 class EventBufferSQLProxy:
@@ -128,6 +130,21 @@ class EventBufferSQLProxy:
         if len(results) == 0:
             return []
         return np.mean(results, axis=0)
+
+    def get_elites(self):
+        mycursor = self.mydb.cursor()
+        rows = "EliteID, Fitness, ActorID, "
+        for i in range(self.n):
+            if i > 0:
+                rows += ", "
+            rows += "Event{}".format(i)
+        cmd = f"SELECT {rows} FROM Archive WHERE ExperimentID = {self.exp_id}"
+        mycursor.execute(cmd)
+        results = mycursor.fetchall()
+        elites = []
+        for result in results:
+            elites.append(Elite(result[0], result[1], result[2], events=result[3:]))
+        return elites
 
     def get_neighbors(self, behavior, niche_divs):
         # Get bounds

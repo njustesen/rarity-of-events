@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../ffai/.idea/ffai.iml" filepath="$PROJECT_DIR$/../ffai/.idea/ffai.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/rarity-of-events.iml" filepath="$PROJECT_DIR$/.idea/rarity-of-events.iml" />
     </modules>
   </component>

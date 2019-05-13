@@ -186,7 +186,7 @@ def main():
                 try:
                     #print(f"- Deleting model {neighbor.elite_id}")
                     os.remove(os.path.join(save_path, f"{neighbor.elite_id}.pt"))
-                    print("Successfully deleted model with id : ", neighbor.elite_id)
+                    #print("Successfully deleted model with id : ", neighbor.elite_id)
                 except:
                     print("Error while deleting model with id : ", neighbor.elite_id)
             name = str(uuid.uuid1())
