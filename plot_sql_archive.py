@@ -72,8 +72,8 @@ names = [
 ]
 
 num_events = len(names)
-num_agents = 2
-exp_id = 2
+num_agents = 3
+exp_id = 3
 pca = False
 
 
@@ -106,7 +106,22 @@ def plot_pca(data, fitnesses, max_fit=1):
     plt.title("Archive")
     plt.tight_layout(pad=-0.5, w_pad=-0.5, h_pad=-0.5)
     #fig.savefig("plots/{}.pdf".format("pca" if pca else "t-sne"), bbox_inches='tight', pad_inches=0)
-    fig.savefig("plots/archives/archive.png", bbox_inches='tight', pad_inches=0)
+    fig.savefig(f"plots/archives/archive_{exp_id}.pdf", bbox_inches='tight', pad_inches=0)
+    return fig
+
+
+def plot_2d(data, fitnesses, max_fit=1):
+    fig, plot = plt.subplots()
+    fig.set_size_inches(4, 4)
+    plt.prism()
+    for i in range(len(data)):
+        for p in range(len(data[i])):
+            size = 2 + (fitnesses[i][p] / max_fit) * 8
+            plt.plot(data[i][p][0], data[i][p][1], 'o', markerfacecolor=colors[i], markersize=size, fillstyle='full', markeredgewidth=0.0)
+    plot.set_xticks(())
+    plot.set_yticks(())
+    plt.title("Archive")
+    fig.savefig(f"plots/archives/archive_{exp_id}.pdf", bbox_inches='tight', pad_inches=0)
     return fig
 
 # Standardize
@@ -128,13 +143,17 @@ else:
 
 # Rebuild structure
 yy = []
+dd = []
 idx=0
 for a in range(num_agents):
     y = []
+    d = []
     for i in range(len(behaviors[a])):
         y.append(transformed[idx])
+        d.append((behaviors[a][0], behaviors[a][0]))
         idx += 1
     yy.append(y)
 
 print("Max fitness: ", max_fit)
 plot_pca(yy, fitnesses, max_fit=max_fit)
+plot_2d(yy, fitnesses, max_fit=max_fit)

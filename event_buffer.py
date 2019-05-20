@@ -154,7 +154,7 @@ class EventBufferSQLProxy:
             if i > 0:
                 rows += ", "
             rows += "MAX(Event{})".format(i)
-        cmd = f"SELECT {rows} FROM Archive WHERE ExperimentID = {self.exp_id}"
+        cmd = f"SELECT {rows} FROM Archive WHERE ExperimentID = {self.exp_id} AND Enabled = true"
         mycursor.execute(cmd)
         maxes = mycursor.fetchall()
 
@@ -169,7 +169,7 @@ class EventBufferSQLProxy:
             if i > 0:
                 where_rows += " AND "
             where_rows += f"Event{i} >= {behavior[i] - distance} AND Event{i} <= {behavior[i] + distance}"
-        cmd = f"SELECT Fitness, EliteID FROM Archive WHERE ExperimentID = {self.exp_id} AND {where_rows}"
+        cmd = f"SELECT Fitness, EliteID FROM Archive WHERE ExperimentID = {self.exp_id} AND {where_rows} AND Enabled = true"
         mycursor.execute(cmd)
         results = mycursor.fetchall()
         elites = []
@@ -185,7 +185,7 @@ class EventBufferSQLProxy:
                 rows += ", "
             rows += f"'{elites[i].elite_id}'"
         rows += ")"
-        cmd = f"DELETE FROM Archive where ExperimentID = {self.exp_id} AND EliteID in {rows}"
+        cmd = f"UPDATE Archive SET Enabled = false, RemovedTimestamp = NOW() WHERE ExperimentID = {self.exp_id} AND EliteID in {rows}"
         mycursor.execute(cmd)
 
     def intrinsic_reward(self, events, vector=False):

@@ -67,7 +67,7 @@ exp_name = scenario + ("_event" if args.roe else "")
 
 print("Scenario: " + scenario)
 
-actor_critic = torch.load("/Users/git/rarity-of-events/models/2/271b0e45-6c9b-11e9-8dad-005056a54761.pt")
+actor_critic = torch.load("/Users/git/rarity-of-events/models/3/783a542d-71cf-11e9-8daf-005056a54761.pt")
 # actor_critic = torch.load("/Users/git/rarity-of-events/models/2/f399ade2-6d52-11e9-8dad-005056a54761.pt")
 
 print("Model loaded")

@@ -163,10 +163,10 @@ def main():
             pass
         #print("Final rewards: ", final_rewards.numpy())
         fitness = final_rewards.numpy().mean()
-        #behavior = event_buffer.get_last_own_events_mean(len(final_rewards))  # From event buffer
+        print("raw: ", final_events.numpy())
         behavior = final_events.numpy().mean(axis=0)
-        #print("Fitness:", fitness)
-        #print("Behavior:", behavior)
+        print("Fitness:", fitness)
+        print("Behavior:", behavior)
         neighbors = event_buffer.get_neighbors(behavior, args.niche_divs)
         if len(neighbors) == 0:
             add = True

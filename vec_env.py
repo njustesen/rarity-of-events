@@ -134,7 +134,7 @@ def worker(remote, parent_remote, env_fn_wrapper):
         # 15-24 Kill increase - for each weapon
         if vars[14] > last_vars[14]:
             for i in range(0, 9):
-                if vars[14] == i:  # If selected weapon
+                if vars[16] == i:  # If selected weapon
                     beh_events[1+i] = 1
 
         return beh_events
