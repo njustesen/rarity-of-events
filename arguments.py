@@ -84,6 +84,8 @@ def get_args():
                         help='number of vars to record (default: 17)')
     parser.add_argument('--qd', action='store_true', default=False,
                         help='RoE QD (default: False)')
+    parser.add_argument('--per-step', action='store_true', default=False,
+                        help='RoE - count events per step rather than per episode (default: False)')
     parser.add_argument('--exp-id', type=int, required=True,
                         help='Experiment ID')
     parser.add_argument('--agent-id', type=int, required=True,

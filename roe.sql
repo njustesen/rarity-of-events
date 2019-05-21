@@ -8,6 +8,7 @@ CREATE TABLE Archive (
     ExperimentID int,
     ActorID int,
     Frame int,
+    EpisodeLength int,
     Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Fitness float,
     Event0 float DEFAULT 0.0,
@@ -21,21 +22,7 @@ CREATE TABLE Archive (
     Event8 float DEFAULT 0.0,
     Event9 float DEFAULT 0.0,
     Event10 float DEFAULT 0.0,
-    Event11 float DEFAULT 0.0,
-    Event12 float DEFAULT 0.0,
-    Event13 float DEFAULT 0.0,
-    Event14 float DEFAULT 0.0,
-    Event15 float DEFAULT 0.0,
-    Event16 float DEFAULT 0.0,
-    Event17 float DEFAULT 0.0,
-    Event18 float DEFAULT 0.0,
-    Event19 float DEFAULT 0.0,
-    Event20 float DEFAULT 0.0,
-    Event21 float DEFAULT 0.0,
-    Event22 float DEFAULT 0.0,
-    Event23 float DEFAULT 0.0,
-    Event24 float DEFAULT 0.0,
-    Event25 float DEFAULT 0.0
+    Event11 float DEFAULT 0.0
 );
 
 CREATE TABLE History SELECT * FROM Archive LIMIT 0;

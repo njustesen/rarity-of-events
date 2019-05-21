@@ -15,7 +15,7 @@ class Elite:
 
 class EventBufferSQLProxy:
 
-    def __init__(self, n, capacity, exp_id, actor_id, user='roe', password='RarityOfEvents', host='localhost', database='roe', event_clip=0.01, qd=False):
+    def __init__(self, n, capacity, exp_id, actor_id, user='roe', password='RarityOfEvents', host='localhost', database='roe', event_clip=0.01, qd=False, per_step=False):
         self.n = n
         self.exp_id = exp_id
         self.actor_id = actor_id
@@ -33,6 +33,7 @@ class EventBufferSQLProxy:
         )
         self.cache = None
         self.qd = qd
+        self.per_step = per_step
         
     def record_events(self, events, frame):
         mycursor = self.mydb.cursor()
@@ -77,15 +78,19 @@ class EventBufferSQLProxy:
         results = mycursor.fetchall()
         return results
 
-    def add_elite(self, name, events, fitness, frame):
+    def add_elite(self, name, events, fitness, frame, episode_length):
+        if self.per_step:
+            ratios = np.divide(events, episode_length)
+        else:
+            ratios = events
         mycursor = self.mydb.cursor()
-        cmd = "INSERT INTO Archive (EliteID, ExperimentID, ActorID, Fitness, Frame"
-        for i in range(len(events)):
+        cmd = "INSERT INTO Archive (EliteID, ExperimentID, ActorID, Fitness, Frame, EpisodeLength"
+        for i in range(len(ratios)):
             cmd += f", Event{i}"
         cmd += ")"
-        cmd += f" VALUES ('{name}', {self.exp_id}, {self.actor_id}, {fitness}, {frame}"
-        for i in range(len(events)):
-            cmd += ", " + str(events[i])
+        cmd += f" VALUES ('{name}', {self.exp_id}, {self.actor_id}, {fitness}, {frame}, {episode_length}"
+        for i in range(len(ratios)):
+            cmd += ", " + str(ratios[i])
         cmd += ")"
         mycursor.execute(cmd)
         self.mydb.commit()
@@ -146,30 +151,39 @@ class EventBufferSQLProxy:
             elites.append(Elite(result[0], result[1], result[2], events=result[3:]))
         return elites
 
-    def get_neighbors(self, behavior, niche_divs):
+    def get_neighbors(self, behavior, niche_divs, episode_length):
+
+        # Convert to ratio
+        if self.per_step:
+            ratios = np.divide(behavior, episode_length)
+        else:
+            ratios = behavior
+
         # Get bounds
         mycursor = self.mydb.cursor()
         rows = ""
         for i in range(self.n):
             if i > 0:
                 rows += ", "
-            rows += "MAX(Event{})".format(i)
+            rows += f"MAX(Event{i})"
         cmd = f"SELECT {rows} FROM Archive WHERE ExperimentID = {self.exp_id}"
         mycursor.execute(cmd)
         maxes = mycursor.fetchall()
+        #print(maxes)
 
         # Get neighbors
         where_rows = ""
         for i in range(self.n):
             min_event = 0
             max_event = maxes[0][i]
-            max_event = max(behavior[i], max_event) if max_event is not None else behavior[i]
+            max_event = max(ratios[i], max_event) if max_event is not None else ratios[i]
             cell_size = (max_event - min_event) / niche_divs
             distance = cell_size / 2
             if i > 0:
                 where_rows += " AND "
-            where_rows += f"Event{i} >= {behavior[i] - distance} AND Event{i} <= {behavior[i] + distance}"
+            where_rows += f"Event{i} >= {ratios[i] - distance} AND Event{i} <= {ratios[i] + distance}"
         cmd = f"SELECT Fitness, EliteID FROM Archive WHERE ExperimentID = {self.exp_id} AND {where_rows}"
+        #print(cmd)
         mycursor.execute(cmd)
         results = mycursor.fetchall()
         elites = []

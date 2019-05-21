@@ -156,7 +156,7 @@ def main():
                 nearest = dist
         return nearest
 
-    def add_to_archive(frame):
+    def add_to_archive(frame, episode_length):
         try:
             os.makedirs(save_path)
         except OSError:
@@ -167,7 +167,7 @@ def main():
         behavior = final_events.numpy().mean(axis=0)
         #print("Fitness:", fitness)
         #print("Behavior:", behavior)
-        neighbors = event_buffer.get_neighbors(behavior, args.niche_divs)
+        neighbors = event_buffer.get_neighbors(behavior, args.niche_divs, episode_length)
         if len(neighbors) == 0:
             add = True
             #print("- Cell empty")
@@ -190,16 +190,19 @@ def main():
                 except:
                     print("Error while deleting model with id : ", neighbor.elite_id)
             name = str(uuid.uuid1())
-            event_buffer.add_elite(name, behavior, fitness, frame)
+            #print("Adding elite")
+            event_buffer.add_elite(name, behavior, fitness, frame, episode_length)
             save_model = actor_critic
             if args.cuda:
                 save_model = copy.deepcopy(actor_critic).cpu()
             torch.save(save_model, os.path.join(save_path, f"{name}.pt"))
 
     # Create event buffer
-    event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id, qd=args.qd)
+    event_buffer = EventBufferSQLProxy(args.num_events, args.capacity, args.exp_id, args.agent_id, qd=args.qd, per_step=args.per_step)
 
     event_episode_rewards = []
+
+    episode_finished = np.zeros(args.num_processes)
 
     start = time.time()
     for j in np.arange(start_updates, num_updates):
@@ -219,7 +222,10 @@ def main():
 
             for e in events:
                 if args.roe:
-                    intrinsic_reward.append(event_buffer.intrinsic_reward(e))
+                    ir = event_buffer.intrinsic_reward(e)
+                    if args.per_step:
+                        ir = ir / 4200
+                    intrinsic_reward.append(ir)
                 else:
                     r = reward[len(intrinsic_reward)]
                     intrinsic_reward.append(r)
@@ -233,14 +239,19 @@ def main():
             episode_events += events
 
             # Event stats
+            '''
             event_rewards = []
             for ei in range(0,args.num_events):
                 ev = np.zeros(args.num_events)
                 ev[ei] = 1
                 er = event_buffer.intrinsic_reward(ev)
+                if args.per_step:
+                    er = er / 4200
+                er = event_buffer.intrinsic_reward(ev)
                 event_rewards.append(er)
 
             event_episode_rewards.append(event_rewards)
+            '''
 
             # If done then clean the history of observations.
             masks = torch.FloatTensor([[0.0] if done_ else [1.0] for done_ in done])
@@ -254,7 +265,9 @@ def main():
             for i in range(args.num_processes):
                 if done[i]:
                     #event_buffer.record_events(np.copy(final_events[i].numpy()), frame=j*args.num_steps*args.num_processes)
-                    add_to_archive(step*args.num_processes + j*args.num_steps*args.num_processes)
+                    episode_length = (step + j*args.num_steps) - episode_finished[i]
+                    episode_finished[i] = episode_length + episode_finished[i]
+                    add_to_archive(step*args.num_processes + j*args.num_steps*args.num_processes, episode_length)
 
             episode_rewards *= masks
             episode_intrinsic_rewards *= masks
@@ -272,8 +285,8 @@ def main():
 
             rollouts.insert(step, current_obs, action.data, value.data, intrinsic_reward, masks)
 
-        final_episode_reward = np.mean(event_episode_rewards, axis=0)
-        event_episode_rewards = []
+        #final_episode_reward = np.mean(event_episode_rewards, axis=0)
+        #event_episode_rewards = []
 
         next_value = actor_critic(Variable(rollouts.observations[-1], volatile=True))[0].data
 
