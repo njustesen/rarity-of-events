@@ -8,10 +8,8 @@ CREATE TABLE Archive (
     ExperimentID int,
     ActorID int,
     Frame int,
-    AddedTimestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    RemovedTimestamp TIMESTAMP DEFAULT NULL,
+    Timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     Fitness float,
-    Enabled BOOLEAN NOT NULL DEFAULT true,
     Event0 float DEFAULT 0.0,
   	Event1 float DEFAULT 0.0,
     Event2 float DEFAULT 0.0,
@@ -39,6 +37,8 @@ CREATE TABLE Archive (
     Event24 float DEFAULT 0.0,
     Event25 float DEFAULT 0.0
 );
+
+CREATE TABLE History SELECT * FROM Archive LIMIT 0;
 
 CREATE USER roe@localhost IDENTIFIED BY 'RarityOfEvents';
 GRANT ALL PRIVILEGES ON *.* TO roe@localhost WITH GRANT OPTION;
