@@ -154,10 +154,7 @@ class EventBufferSQLProxy:
     def get_neighbors(self, behavior, niche_divs, episode_length):
 
         # Convert to ratio
-        if self.per_step:
-            ratios = np.divide(behavior, episode_length)
-        else:
-            ratios = behavior
+        ratios = np.divide(behavior, episode_length)
 
         # Get bounds
         mycursor = self.mydb.cursor()
@@ -165,11 +162,14 @@ class EventBufferSQLProxy:
         for i in range(self.n):
             if i > 0:
                 rows += ", "
-            rows += f"MAX(Event{i})"
+            if self.per_step:
+                rows += f"MAX(Event{i})"
+            else:
+                rows += f"MAX(Event{i} / EpisodeLength)"
         cmd = f"SELECT {rows} FROM Archive WHERE ExperimentID = {self.exp_id}"
         mycursor.execute(cmd)
         maxes = mycursor.fetchall()
-        #print(maxes)
+        # print(maxes)
 
         # Get neighbors
         where_rows = ""
@@ -181,9 +181,12 @@ class EventBufferSQLProxy:
             distance = cell_size / 2
             if i > 0:
                 where_rows += " AND "
-            where_rows += f"Event{i} >= {ratios[i] - distance} AND Event{i} <= {ratios[i] + distance}"
+            if self.per_step:
+                where_rows += f"Event{i} >= {ratios[i] - distance} AND Event{i} <= {ratios[i] + distance}"
+            else:
+                where_rows += f"Event{i} / EpisodeLength >= {ratios[i] - distance} AND Event{i} / EpisodeLength <= {ratios[i] + distance}"
         cmd = f"SELECT Fitness, EliteID FROM Archive WHERE ExperimentID = {self.exp_id} AND {where_rows}"
-        #print(cmd)
+        # print(cmd)
         mycursor.execute(cmd)
         results = mycursor.fetchall()
         elites = []
@@ -200,7 +203,7 @@ class EventBufferSQLProxy:
         rows += ")"
 
         mycursor = self.mydb.cursor()
-        cmd = f"INSERT INTO History SELECT * FROM Archive WHERE EliteID in {rows}"
+        cmd = f"INSERT INTO History SELECT * FROM Archive WHERE ExperimentID = {self.exp_id} AND EliteID in {rows}"
         mycursor.execute(cmd)
 
         mycursor2 = self.mydb.cursor()

@@ -54,7 +54,7 @@ def get_args():
                         help='vizdoom configuration file path (default: ./scenarios/basic.cfg)')
     parser.add_argument('--source-models-path', default='./models',
                         help='directory from where to load source task models [A2T only] (default: ./models)')
-    parser.add_argument('--log-dir', default='./',
+    parser.add_argument('--log-dir', default='./logs',
                         help='directory to save agent logs (default: /tmp/vizdoom)')
     parser.add_argument('--save-dir', default='./models',
                         help='directory to save agent logs (default: ./models/)')
