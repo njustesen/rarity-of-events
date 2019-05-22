@@ -65,7 +65,7 @@ def main():
     obs_shape = (obs_shape[0] * args.num_stack, *obs_shape[1:])
 
     if args.resume:
-        actor_critic = torch.load(os.path.join(save_path, f"{args.exp_id}.pt"))
+        actor_critic = torch.load(os.path.join(save_path, f"{args.agent_id}.pt"))
         filename = glob.glob(os.path.join(log_path, log_file_name))[0]
         with open(filename) as file:
             lines = file.readlines()
@@ -73,25 +73,28 @@ def main():
             start_steps = (int)(lines[-1].strip().split(",")[1])
             num_updates += start_updates
     else:
-        if not args.debug:
-            try:
-                os.makedirs(log_path)
-            except OSError:
-                files = glob.glob(os.path.join(args.log_dir, log_file_name))
-                for f in files:
-                    os.remove(f)
-                #with open(log_file_name, "w") as myfile:
-                #    myfile.write("")
-                #files = glob.glob(os.path.join(args.log_dir, log_event_file_name))
-                #for f in files:
-                #    os.remove(f)
-                #with open(log_event_file_name, "w") as myfile:
-                #    myfile.write("")
-                #files = glob.glob(os.path.join(args.log_dir, log_event_reward_file_name))
-                #for f in files:
-                #    os.remove(f)
-                #with open(log_event_reward_file_name, "w") as myfile:
-                #    myfile.write("")
+        try:
+            os.makedirs(save_path)
+        except OSError:
+            pass
+        try:
+            os.makedirs(log_path)
+        except OSError:
+            files = glob.glob(os.path.join(args.log_dir, log_file_name))
+            for f in files:
+                os.remove(f)
+            #with open(log_file_name, "w") as myfile:
+            #    myfile.write("")
+            #files = glob.glob(os.path.join(args.log_dir, log_event_file_name))
+            #for f in files:
+            #    os.remove(f)
+            #with open(log_event_file_name, "w") as myfile:
+            #    myfile.write("")
+            #files = glob.glob(os.path.join(args.log_dir, log_event_reward_file_name))
+            #for f in files:
+            #    os.remove(f)
+            #with open(log_event_reward_file_name, "w") as myfile:
+            #    myfile.write("")
         actor_critic = CNNPolicy(obs_shape[0], envs.action_space_shape)
         
     action_shape = 1
@@ -156,10 +159,6 @@ def main():
         return nearest
 
     def add_to_archive(frame, episode_length):
-        try:
-            os.makedirs(save_path)
-        except OSError:
-            pass
         #print("Final rewards: ", final_rewards.numpy())
         fitness = final_rewards.numpy().mean()
         #print("raw: ", final_events.numpy())
@@ -338,7 +337,7 @@ def main():
             save_model = actor_critic
             if args.cuda:
                 save_model = copy.deepcopy(actor_critic).cpu()
-            torch.save(save_model, os.path.join(save_path, f"{args.exp_id}.pt"))
+            torch.save(save_model, os.path.join(save_path, f"{args.agent_id}.pt"))
 
             print(log)
 
